@@ -1,62 +1,126 @@
-# Pygments plugin examples
+# SuperCollider Pygments lexer plugin
 
-This repository contains an example of the project scaffolding needed to write a
-plugin lexer/formatter/style/filter for the [Pygments](https://pygments.org)
-syntax highlighter.
+This is a Pygments lexer with custom styles for SuperCollider code. It provides syntax highlighting for SuperCollider files in Pygments-supported environments like mkdocs, sphinx, LaTeX's minted package, and more.
 
-Roadmap:
+Pygments has a built-in lexer for SuperCollider, but the existing implementation has many issues such as not recognizing class names, incorrectly highlighting words which are not keywords in SuperCollider, etc. This plugin is a full reimplementation with much improved lexing, which means more accurate syntax highlighting of SuperCollider code. It has been submitted to the Pygments project and is awaiting review, but in the meantime, you can use it with this plugin.
 
-```
-.
-├── example_filter.py    # An example filter
-├── example_formatter.py # An example formatter
-├── example_lexer.py     # An example lexer
-├── example_style.py     # An example style
-├── pyproject.toml       # The Python package metadata file
-├── README.md            # You are here
-└── test.exmpl           # A test file in the mockup language of the example lexer
-```
+## Features
 
-To be usable, plugins must be installed. If you are running the `pygmentize`
-command, you probably want to use a
-[virtual environment](https://docs.python.org/3/library/venv.html)
-to avoid installing packages globally. For example, here is how to create
-a virtual environment and install this set of plugins into it:
+- **Accurate lexer**: Recognizes SuperCollider class names, keywords, symbols, and general syntax
+- **Custom color themes**: Includes both light and dark themes designed specifically for SuperCollider code
+- **Easy integration**: Works with Pygments-based tools such as mkdocs, Sphinx, and LaTeX minted
 
-```
-python -m venv venv/
-venv/bin/pip install . # install the project in current directory into the virtual environment
-venv/bin/pygmentize ... # use the pygmentize command from the virtual environment
+## Important: Language/lexer name
+
+**Due to a naming conflict with Pygments' built-in SuperCollider lexer, you must use `sc-plugin` as the language/lexer name wherever you want to use this plugin.**  
+
+Do **not** use `sc` or `supercollider`, as those will use the built-in lexer.
+
+## Installation
+
+Install the plugin using pip:
+
+```shell
+pip install pygments-supercollider-lexer
 ```
 
-Alternatively, since this example uses the [Hatch](https://hatch.pypa.io)
-tool, you may use
+## Usage
 
+### 1. Python
+
+In vanilla Python scripts, you can use the lexer like this:
+
+```python
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
+
+code = '''
+SynthDef(\sine, {
+    var sig = SinOsc.ar(\freq.kr(440), 0, \amp.kr(0.1));
+    Out.ar(0, sig ! 2);
+}).add;
+'''
+
+lexer = get_lexer_by_name('sc-plugin')
+formatter = HtmlFormatter(style='supercollider_dark')  # or 'supercollider_light'
+result = highlight(code, lexer, formatter)
+
+with open("output.html", "w") as f:
+    f.write(result)
 ```
-hatch run pygmentize ...
+
+Or on the command line:
+
+```bash
+pygmentize -l sc-plugin -O style=supercollider_dark -f html myfile.scd > output.html
 ```
 
-If you are using Pygments from Python, possibly through a tool like Sphinx,
-mkdocs, etc., then you just need to install the plugin in the same environment
-as the one where you installed Pygments.
+### 2. Markdown/mkdocs
 
-If you want to distribute your plugin on PyPI, you should read the
-[packaging user guide](https://packaging.python.org/en/latest/tutorials/packaging-projects).
+To use this lexer in markdown files with mkdocs, you need to install the [PyMdown Extensions](https://facelessuser.github.io/pymdown-extensions/) and configure your `mkdocs.yml` file to include the `pymdownx.highlight` extension as well as the `pymdownx.superfences` extension.
 
+```yaml
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+```
 
-#### License for this template
+Then, specify `sc-plugin` as the language name at the top of your code block:
 
-There isn't much copyrightable content here, but if you are worried about reuse:
+````markdown
+```sc-plugin
+{ SinOsc.ar(440) * 0.1 }.play;
+```
+````
 
-Copyright (C) 2023 by Jean Abou Samra <jean@abou-samra.fr>
+#### Using the supplied styles with mkdocs
 
-Permission to use, copy, modify, and/or distribute this software for any purpose
-with or without fee is hereby granted.
+To use the custom SuperCollider color themes that come with this plugin in a site built with mkdocs, the best solution is to generate CSS rules for the chosen style and include it in your project. Pygments makes it easy to generate CSS files for the styles with the `pygmentize` command:
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
-OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+```shell
+# For dark theme
+pygmentize -S supercollider_dark -f html -a .highlight > css/supercollider_dark.css
+
+# For light theme  
+pygmentize -S supercollider_light -f html -a .highlight > css/supercollider_light.css
+```
+
+Then, include the generated CSS files in your `mkdocs.yml`:
+
+```yaml
+extra_css:
+  - css/supercollider_dark.css
+```
+
+If you want to support both light and dark modes, you can include both CSS files and wrap their contents in corresponding [prefers-color-scheme media query](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme).
+
+If using the [Material for MkDocs theme](https://squidfunk.github.io/mkdocs-material/) to switch between light and dark modes, you can use `[data-md-color-scheme="default"]` as a selector for the light theme and `[data-md-color-scheme="slate"]` for the dark theme.
+
+### 3. LaTeX minted
+
+To use the lexer with the minted package in LaTeX:
+```latex
+\usepackage{minted}
+...
+\begin{minted}{sc-plugin}
+// SuperCollider code here
+(
+SynthDef(\sine, {
+    Out.ar(0, SinOsc.ar(440))
+}).add;
+)
+\end{minted}
+```
+
+## Troubleshooting
+
+- If you see incorrect highlighting, double-check that you are using `sc-plugin` as the language/lexer name.
+- If you get "no lexer for alias" errors, ensure the plugin is installed in the same Python environment as your tool (MkDocs, Sphinx, etc).
+- If you update the plugin, reinstall it with `pip install -e .` to refresh the entry points.
+
+---
+
+## License
+
+This plugin is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
