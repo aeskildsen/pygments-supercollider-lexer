@@ -34,7 +34,7 @@ def make_sc_styles(colors):
 
 class SuperColliderDark(Style):
     '''
-    This style accompanies the SuperCollider lexer and is designed for use with dark themes. It is reminiscent of the default color scheme in the SuperCollider IDE.
+    This style accompanies the SuperCollider lexer and is designed for use with dark themes.
     '''
     name = 'supercollider_dark'
 

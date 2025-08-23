@@ -52,7 +52,7 @@ with open("output.html", "w") as f:
 
 Or on the command line:
 
-```bash
+```shell
 pygmentize -l sc-plugin -O style=supercollider_dark -f html myfile.scd > output.html
 ```
 
@@ -119,7 +119,21 @@ SynthDef(\sine, {
 - If you get "no lexer for alias" errors, ensure the plugin is installed in the same Python environment as your tool (MkDocs, Sphinx, etc).
 - If you update the plugin, reinstall it with `pip install -e .` to refresh the entry points.
 
----
+## Development
+
+To contribute or modify the lexer, (fork and) clone the repository and install it in editable mode:
+
+```shell
+git clone https://github.com/aeskildsen/pygments-supercollider-lexer.git
+cd pygments-supercollider-lexer
+pip install -e .[dev]
+```
+
+Run tests with:
+
+```shell
+pytest
+```
 
 ## License
 
