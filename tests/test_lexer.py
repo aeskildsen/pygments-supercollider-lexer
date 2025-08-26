@@ -56,9 +56,10 @@ class TestSuperColliderLexer(unittest.TestCase):
         """Test some of SuperCollider's keywords"""
         code = "var arg true sauce nil.isNil thisFunction esac  thisThread"
         tokens = self._tokenize(code)
-        
         keyword_tokens = [t for t in tokens if t[0] in Token.Keyword]
-        self.assertEqual(len(keyword_tokens), 6)
+        name_pseudo_tokens = [t for t in tokens if t[0] is Token.Name.Builtin.Pseudo]
+        self.assertEqual(len(keyword_tokens), 4)
+        self.assertEqual(len(name_pseudo_tokens), 2)
 
     def test_operators(self):
         """Test operators"""
